@@ -1,20 +1,18 @@
-import { useState } from 'react'
-//Week 2: Import components
-import ChatWindow from './components/ChatWindow';
-import Sidebar from './components/Sidebar';
-import MessageInput from './components/MessageInput';
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './components/Login';
+import ChatLayout from './components/ChatLayout';
+import './App.css';
 
 function App() {
   return (
-    <div className="app-container">
-      <Sidebar />
-      <div className="main-content">
-        <ChatWindow />
-        <MessageInput />
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/app" element={<ChatLayout />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
-export default App
+export default App;
