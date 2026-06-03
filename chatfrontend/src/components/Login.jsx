@@ -4,30 +4,47 @@ import { useNavigate } from 'react-router-dom';
 export default function Login() {
   const navigate = useNavigate();
 
-  // State for our form fields
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState(""); // Only used for registering
-  
-  // State to toggle between Login and Register modes
+  const [name, setName] = useState(""); 
   const [isRegistering, setIsRegistering] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); // New state for API errors
 
-  const handleSubmit = (e) => {
+  // Note: Adjust this URL to match your actual backend routing
+  const API_URL = "http://localhost:3000"; 
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage(""); 
     
-    // Create a user object. If they are logging in, we just default the name to "User" for now.
-    const userData = {
-      email: email,
-      name: isRegistering ? name : "User", 
-    };
+    const endpoint = isRegistering ? `${API_URL}/register` : `${API_URL}/login`;
+    const payload = isRegistering ? { name, email, password } : { email, password };
 
-    // Save the user data to the browser's local storage as a string
-    localStorage.setItem("currentUser", JSON.stringify(userData));
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    console.log(isRegistering ? "Registered new user:" : "Logged in:", userData);
-    
-    // Send them to the chat app
-    navigate("/app"); 
+      const data = await response.json();
+
+      if (response.ok) {
+        // The API should return a secure token upon successful login
+        localStorage.setItem("authToken", data.token);
+        
+        // Save the user data so the Profile page can still read it
+        localStorage.setItem("currentUser", JSON.stringify(data.user));
+        
+        navigate("/app"); 
+      } else {
+        // Display the error message returned from your backend
+        setErrorMessage(data.error || "Login failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("API Connection Error:", error);
+      setErrorMessage("Could not connect to the server.");
+    }
   };
 
   return (
@@ -37,34 +54,31 @@ export default function Login() {
         <h2 style={{ textAlign: 'center', color: 'white' }}>
           {isRegistering ? "Create an Account" : "Welcome Back"}
         </h2>
+
+        {/* Display errors if the API rejects the login */}
+        {errorMessage && (
+          <div style={{ color: '#fa777c', textAlign: 'center', fontSize: '0.9rem', backgroundColor: '#3f2e30', padding: '10px', borderRadius: '4px' }}>
+            {errorMessage}
+          </div>
+        )}
         
-        {/* Only show the Name input if they are creating a new account */}
         {isRegistering && (
           <input 
-            type="text" 
-            placeholder="Username" 
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
+            type="text" placeholder="Username" value={name}
+            onChange={(e) => setName(e.target.value)} required
             style={{ padding: '10px', borderRadius: '4px', border: 'none' }}
           />
         )}
         
         <input 
-          type="email" 
-          placeholder="Email" 
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
+          type="email" placeholder="Email" value={email}
+          onChange={(e) => setEmail(e.target.value)} required
           style={{ padding: '10px', borderRadius: '4px', border: 'none' }}
         />
         
         <input 
-          type="password" 
-          placeholder="Password" 
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
+          type="password" placeholder="Password" value={password}
+          onChange={(e) => setPassword(e.target.value)} required
           style={{ padding: '10px', borderRadius: '4px', border: 'none' }}
         />
         
@@ -72,13 +86,9 @@ export default function Login() {
           {isRegistering ? "Sign Up" : "Log In"}
         </button>
 
-        {/* Toggle between modes */}
         <p style={{ color: 'gray', fontSize: '0.8rem', textAlign: 'center', marginTop: '10px' }}>
           {isRegistering ? "Already have an account? " : "Need an account? "}
-          <span 
-            style={{ color: '#00a8fc', cursor: 'pointer' }} 
-            onClick={() => setIsRegistering(!isRegistering)}
-          >
+          <span style={{ color: '#00a8fc', cursor: 'pointer' }} onClick={() => setIsRegistering(!isRegistering)}>
             {isRegistering ? "Log in here" : "Register"}
           </span>
         </p>

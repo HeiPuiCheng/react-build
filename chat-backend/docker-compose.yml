@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      # This connects the Node app to the Mongo container
+      - MONGO_URI=mongodb://db:27017/discordclone 
+    depends_on:
+      - db
+    volumes:
+      # Syncs your local code changes into the container without rebuilding
+      - .:/app
+      - /app/node_modules
+
+  db:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      # Persists your database data even if the container stops
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
