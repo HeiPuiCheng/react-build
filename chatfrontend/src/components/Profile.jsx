@@ -34,9 +34,11 @@ export default function Profile() {
   };
 
   const handleLogout = () => {
-    // Delete the saved session data so they are truly logged out
+    // Clear ALL session data to properly log the user out
     localStorage.removeItem("currentUser");
-    console.log("User logged out");
+    localStorage.removeItem("authToken"); 
+    
+    console.log("User logged out securely");
     navigate("/"); 
   };
 
