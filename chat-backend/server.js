@@ -27,6 +27,14 @@ const User = mongoose.model('User', UserSchema);
 const RoomSchema = new mongoose.Schema({ name: String });
 const Room = mongoose.model('Room', RoomSchema);
 
+const MessageSchema = new mongoose.Schema({
+  roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room', required: true },
+  user: { type: String, required: true },
+  text: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+const Message = mongoose.model('Message', MessageSchema);
+
 // Seed some initial rooms if the database is empty
 Room.countDocuments().then(count => {
   if (count === 0) {
@@ -109,6 +117,36 @@ app.get('/rooms', verifyToken, async (req, res) => {
     res.json(rooms);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch rooms." });
+  }
+});
+
+// Get Messages for a specific room
+app.get('/rooms/:roomId/messages', verifyToken, async (req, res) => {
+  try {
+    // Find all messages that belong to this room, sorted by oldest first
+    const messages = await Message.find({ roomId: req.params.roomId }).sort('createdAt');
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch messages." });
+  }
+});
+
+// Post a new message to a specific room
+app.post('/rooms/:roomId/messages', verifyToken, async (req, res) => {
+  try {
+    // Find the user in the database using the ID from their token to get their name
+    const user = await User.findById(req.user.id);
+    
+    const newMessage = new Message({
+      roomId: req.params.roomId,
+      user: user.name,
+      text: req.body.text
+    });
+    
+    await newMessage.save();
+    res.json(newMessage);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to send message." });
   }
 });
 
