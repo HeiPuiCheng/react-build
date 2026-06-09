@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import ChatWindow from './ChatWindow';
@@ -6,23 +6,31 @@ import MessageInput from './MessageInput';
 
 export default function ChatLayout() {
   const navigate = useNavigate();
+  const [activeRoom, setActiveRoom] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Used to instantly refresh chat when you send a message
 
   useEffect(() => {
-    // Check if the user has a valid session token
     const token = localStorage.getItem("authToken");
-    
-    // If no token is found, redirect them to the login page immediately
-    if (!token) {
-      navigate("/");
-    }
+    if (!token) navigate("/");
   }, [navigate]);
 
   return (
     <div className="app-container">
-      <Sidebar />
+      {/* Pass state down to Sidebar so it can change the active room */}
+      <Sidebar activeRoom={activeRoom} setActiveRoom={setActiveRoom} />
+      
       <div className="main-content">
-        <ChatWindow />
-        <MessageInput />
+        {/* Only show the chat interface if a room is actually selected */}
+        {activeRoom ? (
+          <>
+            <ChatWindow activeRoom={activeRoom} refreshTrigger={refreshTrigger} />
+            <MessageInput activeRoom={activeRoom} onMessageSent={() => setRefreshTrigger(prev => prev + 1)} />
+          </>
+        ) : (
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'gray' }}>
+            <h2>Select a server on the left to start chatting</h2>
+          </div>
+        )}
       </div>
     </div>
   );

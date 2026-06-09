@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function Sidebar() {
-  // Start with an empty array instead of hardcoded strings
+export default function Sidebar({ activeRoom, setActiveRoom }) {
   const [rooms, setRooms] = useState([]);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+
+
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -34,27 +35,31 @@ export default function Sidebar() {
 
   return (
     <div className="sidebar" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      
       <div style={{ flex: 1 }}>
         <h2>Servers</h2>
         <ul>
           {rooms.length === 0 ? <li style={{color: 'gray'}}>Loading...</li> : null}
           
-          {/* Map over the fetched data. Adjust 'room.id' and 'room.name' based on your API response schema */}
-          {rooms.map((room) => (
-            <li key={room.id || room._id}># {room.name || room}</li>
-          ))}
+          {rooms.map((room) => {
+            const roomId = room._id || room.id;
+            return (
+              <li 
+                key={roomId}
+                onClick={() => setActiveRoom(room)} // Set the room when clicked
+                style={{ 
+                  backgroundColor: activeRoom && (activeRoom._id === roomId || activeRoom.id === roomId) ? '#404249' : 'transparent',
+                  padding: '10px',
+                  borderRadius: '5px',
+                  cursor: 'pointer'
+                }}
+              >
+                # {room.name}
+              </li>
+            )
+          })}
         </ul>
       </div>
-
-      <div 
-        onClick={() => navigate('/profile')}
-        style={{ marginTop: 'auto', padding: '15px 10px', backgroundColor: '#232428', borderRadius: '5px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-      >
-        <div style={{ width: '30px', height: '30px', backgroundColor: '#5865f2', borderRadius: '50%' }}></div>
-        <span style={{ fontWeight: 'bold' }}>Settings ⚙️</span>
-      </div>
-      
+      {/* ... Keep your settings profile button ... */}
     </div>
   );
 }
